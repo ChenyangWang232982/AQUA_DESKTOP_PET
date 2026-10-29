@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import base64
+import binascii
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -31,8 +33,15 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="AquaPet Agent", lifespan=lifespan)
 
 
+class ImageAttachment(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    content_type: str
+    data: str = Field(max_length=11_184_812)
+
+
 class ChatRequest(BaseModel):
-    content: str = Field(min_length=1, max_length=20_000)
+    content: str = Field(default="", max_length=20_000)
+    attachments: list[ImageAttachment] = Field(default_factory=list, max_length=5)
 
 
 class ChatResponse(BaseModel):
@@ -51,7 +60,27 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     global agent
 
-    store.save("user", request.content)
+    if not request.content.strip() and not request.attachments:
+        raise HTTPException(status_code=400, detail="请输入消息或添加图片。")
+
+    image_blocks = []
+    for attachment in request.attachments:
+        if attachment.content_type != "image/png":
+            raise HTTPException(status_code=400, detail="图片格式不受支持。")
+        try:
+            image_bytes = base64.b64decode(attachment.data, validate=True)
+        except (ValueError, binascii.Error) as error:
+            raise HTTPException(status_code=400, detail="图片数据无效。") from error
+        if not image_bytes.startswith(b"\x89PNG\r\n\x1a\n") or len(image_bytes) > 8 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="图片数据无效或超过 8 MB。")
+        image_blocks.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{attachment.data}"}})
+
+    saved_content = request.content
+    if request.attachments:
+        saved_content += ("\n" if saved_content else "") + "\n".join(
+            f"[图片附件：{attachment.name}]" for attachment in request.attachments
+        )
+    store.save("user", saved_content)
 
     try:
         if agent is None:
@@ -59,6 +88,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         # 保留原来的基础提示词和历史消息拼接逻辑。
         messages = build_context(store.load_messages())
+        if image_blocks:
+            messages[-1] = {
+                "role": "user",
+                "content": [{"type": "text", "text": request.content or "请查看这张图片。"}, *image_blocks],
+            }
 
         # 一次用户请求使用一个沙盒会话。
         async with sandbox_task():

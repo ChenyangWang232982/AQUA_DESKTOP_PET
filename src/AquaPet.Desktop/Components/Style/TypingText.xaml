@@ -1,0 +1,14 @@
+<UserControl x:Class="AquaPet.Desktop.Components.Style.TypingText"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root"
+             Loaded="TypingText_Loaded"
+             Unloaded="TypingText_Unloaded">
+  <TextBlock FontFamily="{Binding FontFamily, ElementName=Root}"
+             FontSize="{Binding FontSize, ElementName=Root}"
+             FontWeight="{Binding FontWeight, ElementName=Root}"
+             Foreground="{Binding Foreground, ElementName=Root}">
+    <Run x:Name="VisibleRun" />
+    <Run x:Name="CursorRun" Text="▌" />
+  </TextBlock>
+</UserControl>

@@ -1,0 +1,144 @@
+<Window x:Class="AquaPet.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:AquaPet.Desktop.Components.UI"
+        xmlns:style="clr-namespace:AquaPet.Desktop.Components.Style"
+        xmlns:petSettings="clr-namespace:AquaPet.Desktop.Components.Setting.Pet"
+        xmlns:modelSettings="clr-namespace:AquaPet.Desktop.Components.Setting.Model"
+        Title="AquaPet" Height="680" Width="1040" MinHeight="500" MinWidth="760"
+        WindowStartupLocation="CenterScreen" Background="{StaticResource NightBrush}"
+        FontFamily="Cascadia Mono" FontSize="14" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="Aliased"
+        PreviewMouseDown="Window_PreviewMouseDown">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="224" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource SidebarDarkBrush}" BorderThickness="0,0,3,0" Padding="16">
+        <StackPanel>
+          <Border Background="{StaticResource SidebarDarkBrush}" BorderBrush="#08284D" BorderThickness="0,0,3,3" Padding="10,12" Margin="0,0,0,26">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <TextBlock Text="AQUA" FontSize="24" FontWeight="Bold" Foreground="White" />
+              <TextBlock Grid.Row="1" Text="PET // v0.1" FontSize="11" Foreground="#A9E7FF" />
+            </Grid>
+          </Border>
+          <TextBlock Text="// NAVIGATION" FontSize="11" Foreground="{StaticResource SidebarDarkBrush}" Margin="4,0,0,8" />
+          <ui:PixelButton Content="会话" Click="NavButton_Click" />
+          <ui:PixelButton Content="记忆" Click="NavButton_Click" />
+          <ui:PixelButton Content="桌宠" Click="NavButton_Click" />
+          <ui:PixelButton Content="模型" Click="NavButton_Click" />
+          <ui:PixelButton Content="设置" Click="NavButton_Click" />
+        </StackPanel>
+    </Border>
+
+    <Grid Grid.Column="1" Margin="30,24,30,26">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <Border BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="0,0,0,2" Padding="0,0,0,16">
+        <StackPanel>
+          <TextBlock Text="AQUAPET / LOCAL TERMINAL" FontSize="11" Foreground="{StaticResource AccentBrush}" />
+          <style:TypingText x:Name="PanelTitle" Text="会话" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,4,0,2" />
+          <style:TypingText x:Name="PanelDescription" Text="与 AquaPet 交流 · OFFLINE" Foreground="{StaticResource MutedTextBrush}" />
+        </StackPanel>
+      </Border>
+
+      <ContentControl x:Name="MainContent" Grid.Row="1" Grid.RowSpan="2">
+        <Grid x:Name="ConversationContent">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <ListBox x:Name="MessagesList" BorderThickness="0" Background="Transparent" Margin="0,16,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Focusable="False" IsTabStop="False">
+            <ListBox.ItemContainerStyle>
+              <Style TargetType="ListBoxItem">
+                <Setter Property="Focusable" Value="False" />
+                <Setter Property="IsHitTestVisible" Value="False" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Margin" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                  <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                      <ContentPresenter />
+                    </ControlTemplate>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Grid Margin="0,4" MaxWidth="600">
+                  <Grid.Style>
+                    <Style TargetType="Grid">
+                      <Setter Property="HorizontalAlignment" Value="Left" />
+                      <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsUser}" Value="True">
+                          <Setter Property="HorizontalAlignment" Value="Right" />
+                        </DataTrigger>
+                      </Style.Triggers>
+                    </Style>
+                  </Grid.Style>
+                  <Border Background="#09111E" Margin="4,4,-4,-4" />
+                  <Border x:Name="MessageBubble" BorderThickness="2" Padding="14,11">
+                    <Border.Style>
+                      <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource PanelLightBrush}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding IsUser}" Value="True">
+                            <Setter Property="Background" Value="#C2410C" />
+                            <Setter Property="BorderBrush" Value="#FDBA74" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
+                    <StackPanel>
+                      <TextBlock x:Name="SenderLabel" FontSize="10" Margin="0,0,0,5">
+                        <TextBlock.Style>
+                          <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="AQUA // MESSAGE" />
+                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                            <Style.Triggers>
+                              <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                <Setter Property="Text" Value="YOU // MESSAGE" />
+                                <Setter Property="Foreground" Value="White" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                      </TextBlock>
+                      <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
+                    </StackPanel>
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <Border Grid.Row="1" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="2" Background="{StaticResource PanelBrush}" Padding="7" Margin="0,18,0,0">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <TextBox x:Name="MessageInput" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextBrush}" CaretBrush="{StaticResource AccentBrush}" Padding="8" FontSize="14"
+                       VerticalContentAlignment="Center" KeyDown="MessageInput_KeyDown" ToolTip="输入消息，按 Enter 发送" />
+              <ui:PixelButton Grid.Column="1" Content="SEND >" Click="SendButton_Click" Padding="18,9" Margin="8,0,0,0" />
+            </Grid>
+          </Border>
+        </Grid>
+      </ContentControl>
+    </Grid>
+    <ui:Feedback x:Name="FeedbackPopup" Grid.ColumnSpan="2" Panel.ZIndex="10" />
+  </Grid>
+</Window>

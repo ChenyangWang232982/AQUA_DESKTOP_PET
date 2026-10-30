@@ -1,10 +1,14 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using AquaPet.Desktop.Components.Setting.Pet;
 using AquaPet.Desktop.Components.Setting.Model;
 
@@ -28,6 +32,7 @@ public partial class MainWindow : Window
     };
 
     private readonly ObservableCollection<ChatMessage> _messages = new();
+    private readonly ObservableCollection<ImageAttachment> _attachments = new();
 
     private readonly PetSettingsPanel _petSettingsPanel = new();
     private readonly ModelSettingsPanel _modelSettingsPanel = new();
@@ -37,6 +42,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         MessagesList.ItemsSource = _messages;
+        PendingAttachments.ItemsSource = _attachments;
         _petSettingsPanel.FeedbackRequested += PetSettingsPanel_FeedbackRequested;
         _petSettingsPanel.SettingsSaved += PetSettingsPanel_SettingsSaved;
         _modelSettingsPanel.FeedbackRequested += ModelSettingsPanel_FeedbackRequested;
@@ -82,7 +88,7 @@ public partial class MainWindow : Window
 
     private async void MessageInput_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
         {
             await SendMessageAsync();
             e.Handled = true;
@@ -97,21 +103,27 @@ public partial class MainWindow : Window
         }
 
         var message = MessageInput.Text.Trim();
-        if (string.IsNullOrEmpty(message))
+        if (string.IsNullOrEmpty(message) && _attachments.Count == 0)
         {
             return;
         }
 
-        var userMessage = new ChatMessage(message, true);
+        var attachments = _attachments.ToArray();
+        var userMessage = new ChatMessage(message, true, attachments);
         _messages.Add(userMessage);
         MessageInput.Clear();
-        MessagesList.ScrollIntoView(userMessage);
+        _attachments.Clear();
+        ScrollMessagesToEnd();
 
         _isSending = true;
         MessageInput.IsEnabled = false;
         try
         {
-            using var response = await AgentClient.PostAsJsonAsync("chat", new { content = message });
+            using var response = await AgentClient.PostAsJsonAsync("chat", new
+            {
+                content = message,
+                attachments = attachments.Select(item => new { name = item.Name, content_type = "image/png", data = Convert.ToBase64String(item.Data) })
+            });
             var responseBody = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -147,13 +159,140 @@ public partial class MainWindow : Window
 
     private void AddAgentMessage(string content, bool showOnPet = false)
     {
-        var agentMessage = new ChatMessage(content, false);
+        var agentMessage = new ChatMessage(content, false, []);
         _messages.Add(agentMessage);
-        MessagesList.ScrollIntoView(agentMessage);
+        ScrollMessagesToEnd();
         if (showOnPet)
         {
             _ = ((App)Application.Current).ShowPetDialogAsync(content);
         }
+    }
+
+    private void ScrollMessagesToEnd()
+    {
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            FindScrollViewer(MessagesList)?.ScrollToEnd();
+        }));
+    }
+
+    private static ScrollViewer? FindScrollViewer(DependencyObject parent)
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(parent); index++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, index);
+            if (child is ScrollViewer viewer) return viewer;
+            var descendant = FindScrollViewer(child);
+            if (descendant is not null) return descendant;
+        }
+        return null;
+    }
+
+    private void MessageInput_DragOver(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+        e.Effects = DragDropEffects.Copy;
+        e.Handled = true;
+    }
+
+    private void MessageInput_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] paths) return;
+        foreach (var path in paths) AddImageFile(path);
+        e.Handled = true;
+    }
+
+    private void MessageInput_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.V || (Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
+
+        try
+        {
+            if (Clipboard.ContainsFileDropList())
+            {
+                var paths = Clipboard.GetFileDropList();
+                e.Handled = true;
+                foreach (string? path in paths)
+                    if (!string.IsNullOrEmpty(path)) AddImageFile(path);
+            }
+            else if (Clipboard.ContainsImage() && Clipboard.GetImage() is BitmapSource image)
+            {
+                e.Handled = true;
+                AddImage(image, $"{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+            }
+            else if (Clipboard.GetData("PNG") is Stream pngStream)
+            {
+                e.Handled = true;
+                var frame = BitmapFrame.Create(pngStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                AddImage(frame, $"{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+            }
+        }
+        catch (Exception error)
+        {
+            e.Handled = true;
+            FeedbackPopup.Show("图片添加失败", error.Message, false);
+        }
+    }
+
+    private void MessageInput_Pasting(object sender, DataObjectPastingEventArgs e)
+    {
+        try
+        {
+            if (e.SourceDataObject.GetDataPresent(DataFormats.FileDrop) &&
+                e.SourceDataObject.GetData(DataFormats.FileDrop) is string[] paths)
+            {
+                e.CancelCommand();
+                foreach (var path in paths) AddImageFile(path);
+            }
+            else if (e.SourceDataObject.GetDataPresent(DataFormats.Bitmap) && Clipboard.GetImage() is BitmapSource image)
+            {
+                e.CancelCommand();
+                AddImage(image, $"{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
+            }
+        }
+        catch (Exception error)
+        {
+            FeedbackPopup.Show("图片添加失败", error.Message, false);
+        }
+    }
+
+    private void AddImageFile(string path)
+    {
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var image = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            AddImage(image, Path.GetFileName(path));
+        }
+        catch (Exception error)
+        {
+            FeedbackPopup.Show("图片添加失败", error.Message, false);
+        }
+    }
+
+    private void AddImage(BitmapSource image, string name)
+    {
+        if (_attachments.Count >= 5) throw new InvalidOperationException("一次最多添加 5 张图片。");
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(image));
+        using var stream = new MemoryStream();
+        encoder.Save(stream);
+        if (stream.Length > 8 * 1024 * 1024) throw new InvalidOperationException("图片转换后不能超过 8 MB。");
+        var bytes = stream.ToArray();
+        using var previewStream = new MemoryStream(bytes);
+        var preview = new BitmapImage();
+        preview.BeginInit();
+        preview.CacheOption = BitmapCacheOption.OnLoad;
+        preview.DecodePixelWidth = 300;
+        preview.StreamSource = previewStream;
+        preview.EndInit();
+        preview.Freeze();
+        _attachments.Add(new ImageAttachment(name, bytes, preview));
+    }
+
+    private void RemoveAttachment_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: ImageAttachment attachment }) _attachments.Remove(attachment);
     }
 
     private static string ReadErrorMessage(string responseBody, System.Net.HttpStatusCode statusCode)
@@ -175,5 +314,13 @@ public partial class MainWindow : Window
     }
 
     private sealed record AgentResponse(string Content);
-    private sealed record ChatMessage(string Content, bool IsUser);
+    private sealed record ImageAttachment(string Name, byte[] Data, ImageSource Preview)
+    {
+        public string DisplayName => $"📎 {Name}";
+    }
+    private sealed record ChatMessage(string Content, bool IsUser, IReadOnlyList<ImageAttachment> Attachments)
+    {
+        public bool HasText => !string.IsNullOrWhiteSpace(Content);
+        public bool HasAttachments => Attachments.Count > 0;
+    }
 }

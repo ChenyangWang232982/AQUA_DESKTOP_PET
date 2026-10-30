@@ -37,8 +37,6 @@ public partial class ModelSettingsPanel : UserControl
             {
                 BaseUrl = configured.BaseUrl == "https://open.bigmodel.cn/api/paas/v4"
                     ? ModelConfig.Default.BaseUrl : configured.BaseUrl,
-                ModelName = configured.ModelName == "glm-5.3-flash"
-                    ? ModelConfig.Default.ModelName : configured.ModelName,
             };
             Apply(_saved);
         }
@@ -71,7 +69,6 @@ public partial class ModelSettingsPanel : UserControl
     private void Selection_Changed(object sender, SelectionChangedEventArgs e) => UpdateSaveAvailability();
     private void TextInput_Changed(object sender, TextChangedEventArgs e) => UpdateSaveAvailability();
     private void TokenInput_Changed(object sender, RoutedEventArgs e) => UpdateSaveAvailability();
-
     private async Task<string> ReadSettingOrDefaultAsync(string field, string defaultValue)
     {
         try

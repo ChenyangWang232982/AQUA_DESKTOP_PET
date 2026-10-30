@@ -1,7 +1,11 @@
 import asyncio
 import io
+import gzip
+import hashlib
+import os
 import shlex
 import tarfile
+import uuid
 from datetime import timedelta
 
 from opensandbox import Sandbox
@@ -54,12 +58,22 @@ class SandboxSession:
                     mountPath="/persist",
                     readOnly=False,
                 ),
+                Volume(
+                    name="skills",
+                    pvc=PVC(
+                        claimName="aquapet-skills",
+                        createIfNotExists=False,
+                        deleteOnSandboxTermination=False,
+                    ),
+                    mountPath="/skills",
+                    readOnly=False,
+                ),
             ],
             env={
                 "PATH": (
                     "/persist/python/bin:"
                     "/usr/local/sbin:/usr/local/bin:"
-                    "usr/sbin:/usr/bin:/sbin:/bin"
+                    "/usr/sbin:/usr/bin:/sbin:/bin"
                 ),
             },
             connection_config=ConnectionConfig(
@@ -101,31 +115,52 @@ class SandboxSession:
             )
             return await self._run_command(sandbox, "python /tmp/skill.py")
 
+    async def prepare_skill_data(self, path: str) -> None:
+        """创建 Skill 专用持久目录。"""
+        async with self._lock:
+            sandbox = await self._ensure_sandbox()
+            await sandbox.files.create_directories([WriteEntry(path=path, mode=700)])
+
     async def stage_skill(self, skill_directory: Path) -> str:
-        """将 Skill 目录复制到当前沙盒，返回沙盒内的路径。"""
+        """在持久卷创建完整项目的内容快照，避免并发覆盖已有快照。"""
 
         skill_directory = skill_directory.resolve()
-        sandbox_path = f"/tmp/skills/{skill_directory.name}"
-
-        # 一次传输压缩包，避免大型技能产生上万个独立的文件请求。
         archive_data = io.BytesIO()
-        with tarfile.open(fileobj=archive_data, mode="w:gz") as archive:
-            for entry in skill_directory.rglob("*"):
-                if entry.is_symlink() or not entry.resolve().is_relative_to(skill_directory):
-                    raise ValueError(f"Skill 包含不安全的路径：{entry}")
-                if entry.is_file() or entry.is_dir():
-                    archive.add(entry, arcname=entry.relative_to(skill_directory).as_posix(), recursive=False)
+        with tarfile.open(fileobj=archive_data, mode="w") as archive:
+            for root, directories, files in os.walk(skill_directory, followlinks=False):
+                directories[:] = sorted(d for d in directories if d not in {".git", "__pycache__", ".venv", "node_modules"})
+                for name in [*directories, *sorted(files)]:
+                    entry = Path(root) / name
+                    if entry.is_symlink() or not entry.resolve().is_relative_to(skill_directory):
+                        raise ValueError(f"Skill 包含不安全的路径：{entry}")
+                    if entry.is_file() or entry.is_dir():
+                        archive.add(entry, arcname=entry.relative_to(skill_directory).as_posix(), recursive=False)
+
+        archive_bytes = archive_data.getvalue()
+        digest = hashlib.sha256(archive_bytes).hexdigest()
+        sandbox_path = f"/skills/projects/{digest}"
 
         async with self._lock:
             sandbox = await self._ensure_sandbox()
-            archive_path = f"/tmp/{skill_directory.name}-skill.tar.gz"
-            await sandbox.files.create_directories([WriteEntry(path=sandbox_path, mode=755)])
-            await sandbox.files.write_files([WriteEntry(path=archive_path, data=archive_data.getvalue(), mode=644)])
-            extract = (
-                "import sys, tarfile; "
-                "t=tarfile.open(sys.argv[1], 'r:gz'); "
-                "t.extractall(sys.argv[2], filter='data'); t.close()"
-            )
+            archive_path = f"/tmp/skill-{uuid.uuid4().hex}.tar.gz"
+            await sandbox.files.create_directories([WriteEntry(path="/skills/projects", mode=755)])
+            await sandbox.files.write_files([WriteEntry(path=archive_path, data=gzip.compress(archive_bytes, mtime=0), mode=644)])
+            extract = '''import os, shutil, sys, tarfile, tempfile
+archive, dest = sys.argv[1:]
+if not os.path.isdir(dest):
+    temp = tempfile.mkdtemp(prefix='.staging-', dir=os.path.dirname(dest))
+    try:
+        with tarfile.open(archive, 'r:gz') as tar:
+            tar.extractall(temp, filter='data')
+        try:
+            os.rename(temp, dest)
+        except OSError:
+            if not os.path.isdir(dest):
+                raise
+    finally:
+        if os.path.isdir(temp):
+            shutil.rmtree(temp)
+'''
             result = await self._run_command(
                 sandbox,
                 f"python -c {shlex.quote(extract)} {shlex.quote(archive_path)} {shlex.quote(sandbox_path)}",

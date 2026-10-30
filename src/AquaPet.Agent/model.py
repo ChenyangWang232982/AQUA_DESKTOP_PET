@@ -63,9 +63,9 @@ def load_model_config() -> ModelConfig:
     )
 
 
-def create_chat_model():
+def create_chat_model(config: ModelConfig | None = None):
     """Create the LangChain chat model used by later LangGraph nodes."""
-    config = load_model_config()
+    config = config or load_model_config()
     if not config.api_key:
         raise RuntimeError(
             "No model token is configured. Set it in AquaPet's 模型 page or "
@@ -77,11 +77,22 @@ def create_chat_model():
 
     from langchain_openai import ChatOpenAI
 
-    return ChatOpenAI(
+    class ZaiChatOpenAI(ChatOpenAI):
+        """Preserve whether the provider returned web-search results."""
+
+        def _create_chat_result(self, response, generation_info=None):
+            raw = response if isinstance(response, dict) else response.model_dump()
+            result = super()._create_chat_result(response, generation_info)
+            if "web_search" in raw:
+                result.generations[0].message.response_metadata["zai_search_result_count"] = len(raw.get("web_search") or [])
+            return result
+
+    return ZaiChatOpenAI(
         model=config.model_name,
         api_key=config.api_key,
         base_url=config.base_url.rstrip("/"),
         reasoning_effort=config.reasoning_effort,
+        use_responses_api=False,
         # AquaPet's current /chat endpoint returns one complete response.
         # Streaming will be enabled only when the desktop receives SSE chunks.
         streaming=False,

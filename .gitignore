@@ -1,1 +1,37 @@
+# Local secrets; example files remain available to contributors.
 .env
+.env.*
+!.env.example
+
+# Python environments and caches.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# .NET build and IDE output.
+src/AquaPet.Desktop/bin/
+src/AquaPet.Desktop/obj/
+src/AquaPet.PetHost/bin/
+src/AquaPet.PetHost/obj/
+.vs/
+*.user
+*.suo
+/build-check/
+
+# Runtime logs and local databases.
+/logs/
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Third-party JavaScript dependencies.
+node_modules/

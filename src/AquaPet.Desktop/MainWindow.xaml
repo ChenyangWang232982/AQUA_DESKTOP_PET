@@ -7,28 +7,31 @@
         xmlns:modelSettings="clr-namespace:AquaPet.Desktop.Components.Setting.Model"
         Title="AquaPet" Height="680" Width="1040" MinHeight="500" MinWidth="760"
         WindowStartupLocation="CenterScreen" Background="{StaticResource NightBrush}"
-        FontFamily="Cascadia Mono" FontSize="14" UseLayoutRounding="True" SnapsToDevicePixels="True"
-        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="Aliased"
+        FontFamily="Microsoft YaHei" FontWeight="Normal" FontSize="14" UseLayoutRounding="True" SnapsToDevicePixels="True"
         PreviewMouseDown="Window_PreviewMouseDown">
+  <Window.Resources>
+    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource AquaVerticalScrollBar}" />
+  </Window.Resources>
   <Grid>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="224" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource SidebarDarkBrush}" BorderThickness="0,0,3,0" Padding="16">
+    <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" BorderBrush="#FF6B6B" BorderThickness="0,0,2,0" Margin="0" Padding="16">
         <StackPanel>
-          <Border Background="{StaticResource SidebarDarkBrush}" BorderBrush="#08284D" BorderThickness="0,0,3,3" Padding="10,12" Margin="0,0,0,26">
+          <Border Background="#3A3A36" BorderBrush="#FFD93D" BorderThickness="2" CornerRadius="2" Padding="10,12" Margin="0,0,0,26" RenderTransformOrigin="0.5,0.5">
+            <Border.RenderTransform><RotateTransform Angle="-1" /></Border.RenderTransform>
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
               </Grid.RowDefinitions>
-              <TextBlock Text="AQUA" FontSize="24" FontWeight="Bold" Foreground="White" />
-              <TextBlock Grid.Row="1" Text="PET // v0.1" FontSize="11" Foreground="#A9E7FF" />
+              <TextBlock Text="AquaPet" FontSize="24" FontWeight="Bold" Foreground="#F1F1EE" />
+              <TextBlock Grid.Row="1" Text="桌面小伙伴 ✦" FontSize="11" Foreground="#FFD93D" />
             </Grid>
           </Border>
-          <TextBlock Text="// NAVIGATION" FontSize="11" Foreground="{StaticResource SidebarDarkBrush}" Margin="4,0,0,8" />
+          <TextBlock Text="✎ 目录" FontSize="12" Foreground="{StaticResource SidebarDarkBrush}" Margin="4,0,0,8" />
           <ui:PixelButton Content="会话" Click="NavButton_Click" />
           <ui:PixelButton Content="记忆" Click="NavButton_Click" />
           <ui:PixelButton Content="桌宠" Click="NavButton_Click" />
@@ -38,18 +41,25 @@
     </Border>
 
     <Grid Grid.Column="1" Margin="30,24,30,26">
+      <Grid.Background>
+        <DrawingBrush TileMode="Tile" Viewport="0,0,28,28" ViewportUnits="Absolute" Viewbox="0,0,28,28" ViewboxUnits="Absolute">
+          <DrawingBrush.Drawing><DrawingGroup><GeometryDrawing Brush="#191C22" Geometry="M0,0 H28 V28 H0 Z" /><GeometryDrawing Brush="#293139" Geometry="M0,27 H28 V28 H0 Z" /></DrawingGroup></DrawingBrush.Drawing>
+        </DrawingBrush>
+      </Grid.Background>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <Border BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="0,0,0,2" Padding="0,0,0,16">
-        <StackPanel>
-          <TextBlock Text="AQUAPET / LOCAL TERMINAL" FontSize="11" Foreground="{StaticResource AccentBrush}" />
-          <style:TypingText x:Name="PanelTitle" Text="会话" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,4,0,2" />
-          <style:TypingText x:Name="PanelDescription" Text="与 AquaPet 交流 · OFFLINE" Foreground="{StaticResource MutedTextBrush}" />
-        </StackPanel>
+      <Border Background="#242832" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="0" CornerRadius="2" Padding="16" Margin="0,0,0,4">
+        <Grid>
+          <Rectangle Stroke="#9CB2B0" StrokeThickness="2" StrokeDashArray="2 1.5" RadiusX="2" RadiusY="2" Margin="-15" IsHitTestVisible="False" />
+          <StackPanel VerticalAlignment="Center">
+            <style:TypingText x:Name="PanelTitle" Text="会话" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,4,0,2" />
+            <style:TypingText x:Name="PanelDescription" Text="与 AquaPet 交流 · OFFLINE" Foreground="{StaticResource MutedTextBrush}" />
+          </StackPanel>
+        </Grid>
       </Border>
 
       <ContentControl x:Name="MainContent" Grid.Row="1" Grid.RowSpan="2">
@@ -58,11 +68,10 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
-          <ListBox x:Name="MessagesList" BorderThickness="0" Background="Transparent" Margin="0,16,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Focusable="False" IsTabStop="False">
+          <ListBox x:Name="MessagesList" BorderThickness="0" Background="Transparent" Margin="0,16,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False" Focusable="False" IsTabStop="False">
             <ListBox.ItemContainerStyle>
               <Style TargetType="ListBoxItem">
                 <Setter Property="Focusable" Value="False" />
-                <Setter Property="IsHitTestVisible" Value="False" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="Margin" Value="0" />
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -88,16 +97,16 @@
                       </Style.Triggers>
                     </Style>
                   </Grid.Style>
-                  <Border Background="#09111E" Margin="4,4,-4,-4" />
-                  <Border x:Name="MessageBubble" BorderThickness="2" Padding="14,11">
+                  <Border Background="#FF6B6B" CornerRadius="2" Margin="4,4,-4,-4" />
+                  <Border x:Name="MessageBubble" BorderThickness="2" CornerRadius="2" Padding="14,11">
                     <Border.Style>
                       <Style TargetType="Border">
                         <Setter Property="Background" Value="{StaticResource PanelLightBrush}" />
                         <Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" />
                         <Style.Triggers>
                           <DataTrigger Binding="{Binding IsUser}" Value="True">
-                            <Setter Property="Background" Value="#C2410C" />
-                            <Setter Property="BorderBrush" Value="#FDBA74" />
+                            <Setter Property="Background" Value="#7C3038" />
+                            <Setter Property="BorderBrush" Value="#FF6B6B" />
                           </DataTrigger>
                         </Style.Triggers>
                       </Style>
@@ -107,17 +116,42 @@
                         <TextBlock.Style>
                           <Style TargetType="TextBlock">
                             <Setter Property="Text" Value="AQUA // MESSAGE" />
-                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="#B7BCBA" />
                             <Style.Triggers>
                               <DataTrigger Binding="{Binding IsUser}" Value="True">
                                 <Setter Property="Text" Value="YOU // MESSAGE" />
-                                <Setter Property="Foreground" Value="White" />
+                                <Setter Property="Foreground" Value="#B7BCBA" />
                               </DataTrigger>
                             </Style.Triggers>
                           </Style>
                         </TextBlock.Style>
                       </TextBlock>
                       <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
+                      <Border Height="1" Background="#FF6B6B" Margin="0,8,0,4">
+                        <Border.Style>
+                          <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                              <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                  <Condition Binding="{Binding HasText}" Value="True" />
+                                  <Condition Binding="{Binding HasAttachments}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible" />
+                              </MultiDataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </Border.Style>
+                      </Border>
+                      <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,4,0,0">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource TextBrush}" Margin="0,3,0,0" Cursor="Hand" ToolTipService.InitialShowDelay="0" ToolTipService.ShowDuration="60000">
+                              <TextBlock.ToolTip><ToolTip><Image Source="{Binding Preview}" MaxWidth="300" MaxHeight="220" Stretch="Uniform" /></ToolTip></TextBlock.ToolTip>
+                            </TextBlock>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                     </StackPanel>
                   </Border>
                 </Grid>
@@ -125,15 +159,29 @@
             </ListBox.ItemTemplate>
           </ListBox>
 
-          <Border Grid.Row="1" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="2" Background="{StaticResource PanelBrush}" Padding="7" Margin="0,18,0,0">
+          <Border Grid.Row="1" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="2" CornerRadius="2" Background="{StaticResource PanelBrush}" Padding="7" Margin="0,18,0,0"
+                  AllowDrop="True" PreviewDragOver="MessageInput_DragOver" PreviewDrop="MessageInput_Drop">
             <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
-              <TextBox x:Name="MessageInput" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextBrush}" CaretBrush="{StaticResource AccentBrush}" Padding="8" FontSize="14"
-                       VerticalContentAlignment="Center" KeyDown="MessageInput_KeyDown" ToolTip="输入消息，按 Enter 发送" />
-              <ui:PixelButton Grid.Column="1" Content="SEND >" Click="SendButton_Click" Padding="18,9" Margin="8,0,0,0" />
+              <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+              <TextBox x:Name="MessageInput" Grid.Row="1" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextBrush}" CaretBrush="{StaticResource AccentBrush}" Padding="8" FontSize="14"
+                       MinHeight="52" MaxHeight="180" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AllowDrop="True"
+                       VerticalContentAlignment="Top" PreviewKeyDown="MessageInput_PreviewKeyDown" KeyDown="MessageInput_KeyDown" DataObject.Pasting="MessageInput_Pasting" ToolTip="Enter 发送，Shift+Enter 换行；可拖入或粘贴图片" />
+              <ItemsControl x:Name="PendingAttachments" Grid.Row="0" Margin="8,0,0,0">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate><DataTemplate>
+                  <Border Background="{StaticResource PanelLightBrush}" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="1" CornerRadius="2" Margin="0,4,8,0" Padding="7,3">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Cursor="Hand" ToolTipService.InitialShowDelay="0" ToolTipService.ShowDuration="60000">
+                        <TextBlock.ToolTip><ToolTip><Image Source="{Binding Preview}" MaxWidth="300" MaxHeight="220" Stretch="Uniform" /></ToolTip></TextBlock.ToolTip>
+                      </TextBlock>
+                      <Button Content="×" Tag="{Binding}" Click="RemoveAttachment_Click" Margin="8,0,0,0" Padding="2,0" ToolTip="移除附件" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate></ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,4,4">
+                <ui:PixelButton Content="发送 ↑" Click="SendButton_Click" Height="36" Padding="14,6" Margin="0" HorizontalContentAlignment="Center" />
+              </StackPanel>
             </Grid>
           </Border>
         </Grid>

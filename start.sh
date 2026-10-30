@@ -24,14 +24,14 @@ stop_agent() {
 
 trap stop_agent EXIT INT TERM
 
-if ! powershell.exe -NoProfile -Command "& '$PYTHON_EXE' -c \"import fastapi, uvicorn, langgraph, langchain_openai\""; then
+if ! powershell.exe -NoProfile -Command "& '$PYTHON_EXE' -s -c \"import fastapi, uvicorn, langgraph, langchain_openai\""; then
     echo "AquaPet Agent dependencies are missing. Run:"
     echo "  D:\\work\\conda\\envs\\pet\\python.exe -m pip install fastapi \"uvicorn[standard]\" langgraph langchain-openai"
     exit 1
 fi
 
 echo "Starting AquaPet Agent on http://127.0.0.1:$AGENT_PORT ..."
-AGENT_PID="$(powershell.exe -NoProfile -Command "\$process = Start-Process -FilePath '$PYTHON_EXE' -ArgumentList '-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '$AGENT_PORT' -WorkingDirectory '$PROJECT_ROOT_WINDOWS\\src\\AquaPet.Agent' -WindowStyle Hidden -PassThru; \$process.Id")"
+AGENT_PID="$(powershell.exe -NoProfile -Command "\$process = Start-Process -FilePath '$PYTHON_EXE' -ArgumentList '-s', '-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '$AGENT_PORT' -WorkingDirectory '$PROJECT_ROOT_WINDOWS\\src\\AquaPet.Agent' -WindowStyle Hidden -PassThru; \$process.Id")"
 
 for _ in {1..20}; do
     if powershell.exe -NoProfile -Command "try { \$response = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:$AGENT_PORT/health; exit [int](\$response.StatusCode -ne 200) } catch { exit 1 }"; then

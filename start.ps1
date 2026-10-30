@@ -20,7 +20,7 @@ if (-not (Test-Path -LiteralPath $pythonExe)) {
 }
 
 try {
-    & $pythonExe -c 'import fastapi, uvicorn, langgraph, langchain_openai'
+    & $pythonExe -s -c 'import fastapi, uvicorn, langgraph, langchain_openai'
     if ($LASTEXITCODE -ne 0) {
         throw 'AquaPet Agent dependencies are missing.'
     }
@@ -29,7 +29,7 @@ try {
     Write-Host "Starting AquaPet Agent on http://127.0.0.1:$agentPort ..."
     $agentProcess = Start-Process `
         -FilePath $pythonExe `
-        -ArgumentList @('-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', "$agentPort") `
+        -ArgumentList @('-s', '-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', "$agentPort") `
         -WorkingDirectory $agentDirectory `
         -RedirectStandardOutput $agentOutputLog `
         -RedirectStandardError $agentErrorLog `
@@ -55,7 +55,7 @@ try {
     }
 
     if (-not $ready) {
-        throw "Agent did not become ready. Check PostgreSQL and $agentErrorLog"
+        throw "Agent did not become ready. Check $agentErrorLog"
     }
 
     Write-Host 'Agent is ready. Starting AquaPet Desktop...'

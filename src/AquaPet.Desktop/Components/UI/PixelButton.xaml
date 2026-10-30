@@ -7,29 +7,37 @@
     <Setter Property="Padding" Value="12,10" />
     <Setter Property="HorizontalContentAlignment" Value="Left" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
-    <Setter Property="BorderThickness" Value="0,0,3,3" />
-    <Setter Property="BorderBrush" Value="#08284D" />
-    <Setter Property="Background" Value="#123B6A" />
-    <Setter Property="Foreground" Value="White" />
-    <Setter Property="FontFamily" Value="Cascadia Mono" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="#777B80" />
+    <Setter Property="Background" Value="#303641" />
+    <Setter Property="Foreground" Value="#F1F1EE" />
+    <Setter Property="FontFamily" Value="Microsoft YaHei" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ui:PixelButton}">
           <Grid>
-            <Border x:Name="shadow" Background="#06182F" Margin="3,3,-3,-3" />
-            <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-              <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+            <Border x:Name="shadow" Background="#777B80" CornerRadius="2" Margin="3,3,-3,-3" />
+            <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="2">
+              <Grid>
+                <Rectangle x:Name="outline" RadiusX="2" RadiusY="2" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="2" StrokeDashArray="2 1.5" IsHitTestVisible="False" />
+                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+              </Grid>
             </Border>
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="border" Property="Background" Value="#1B548E" />
+              <Setter TargetName="border" Property="Background" Value="#424750" />
+              <Setter TargetName="shadow" Property="Background" Value="#92969B" />
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
               <Setter TargetName="shadow" Property="Margin" Value="0" />
               <Setter TargetName="border" Property="Margin" Value="3,3,-3,-3" />
+              <Setter TargetName="outline" Property="Stroke" Value="#FF6B6B" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="shadow" Property="Background" Value="#FF6B6B" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="border" Property="Opacity" Value="0.45" />

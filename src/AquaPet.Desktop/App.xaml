@@ -9,18 +9,18 @@
         <ResourceDictionary Source="Components/UI/PixelButton.xaml" />
         <ResourceDictionary Source="Components/UI/AquaScrollBar.xaml" />
       </ResourceDictionary.MergedDictionaries>
-    <SolidColorBrush x:Key="InkBrush" Color="#142033" />
-    <SolidColorBrush x:Key="NightBrush" Color="#0E1728" />
-    <SolidColorBrush x:Key="PanelBrush" Color="#17243A" />
-    <SolidColorBrush x:Key="PanelLightBrush" Color="#213450" />
-    <SolidColorBrush x:Key="SidebarBrush" Color="#8ED7F8" />
-    <SolidColorBrush x:Key="SidebarDarkBrush" Color="#123B6A" />
-    <SolidColorBrush x:Key="SidebarHoverBrush" Color="#1B548E" />
-    <SolidColorBrush x:Key="AccentBrush" Color="#67E8D4" />
-    <SolidColorBrush x:Key="AccentDarkBrush" Color="#3BAEAA" />
-    <SolidColorBrush x:Key="TextBrush" Color="#E7F5F2" />
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#9CB3C7" />
-    <SolidColorBrush x:Key="WarmBrush" Color="#FFB86B" />
+    <SolidColorBrush x:Key="InkBrush" Color="#F1F1EE" />
+    <SolidColorBrush x:Key="NightBrush" Color="#191C22" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#242832" />
+    <SolidColorBrush x:Key="PanelLightBrush" Color="#303440" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#21252E" />
+    <SolidColorBrush x:Key="SidebarDarkBrush" Color="#E9ECE9" />
+    <SolidColorBrush x:Key="SidebarHoverBrush" Color="#3A3E49" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#4ECDC4" />
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="#879A9D" />
+    <SolidColorBrush x:Key="TextBrush" Color="#F1F1EE" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#B7BCBA" />
+    <SolidColorBrush x:Key="WarmBrush" Color="#FFD93D" />
     </ResourceDictionary>
   </Application.Resources>
 </Application>

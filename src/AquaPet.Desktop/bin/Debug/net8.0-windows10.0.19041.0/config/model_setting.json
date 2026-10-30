@@ -1,7 +1,0 @@
-{
-  "provider": "glm",
-  "token": "",
-  "baseUrl": "https://api.z.ai/api/paas/v4",
-  "modelName": "glm-5.3",
-  "reasoningEffort": "max"
-}

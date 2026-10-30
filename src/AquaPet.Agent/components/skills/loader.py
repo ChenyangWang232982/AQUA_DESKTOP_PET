@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from pathlib import Path
+import logging
+import os
 
 import yaml
 
 
 # 从当前文件的位置找到项目根目录，再进入 skills 文件夹。
 SKILLS_DIR = Path(__file__).resolve().parents[4] / "skills"
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -16,6 +19,7 @@ class Skill:
     description: str
     content: str
     directory: Path
+    project_directory: Path
 
 
 def load_skill(skill_directory: Path) -> Skill:
@@ -44,35 +48,41 @@ def load_skill(skill_directory: Path) -> Skill:
     if not isinstance(description, str) or not description.strip():
         raise ValueError(f"Skill 缺少有效的 description：{skill_file}")
 
-    if name != skill_directory.name:
-        raise ValueError(
-            f"Skill 名称 {name!r} 与目录名 {skill_directory.name!r} 不一致"
-        )
+    skill_directory = skill_directory.resolve()
+    relative = skill_directory.relative_to(SKILLS_DIR.resolve())
+    project_directory = SKILLS_DIR.resolve() / relative.parts[0] if relative.parts else skill_directory
 
     return Skill(
         name=name,
         description=description,
         content=parts[2].strip(),
         directory=skill_directory,
+        project_directory=project_directory,
     )
 
 
 def discover_skills() -> list[Skill]:
-    """扫描 skills 目录，返回找到的技能。"""
+    """递归扫描所有项目中的 SKILL.md，不跟随符号链接。"""
 
     if not SKILLS_DIR.is_dir():
         return []
 
     skills = []
 
-    for directory in sorted(SKILLS_DIR.iterdir()):
-        if not directory.is_dir():
+    seen: dict[str, Path] = {}
+    for root, directories, files in os.walk(SKILLS_DIR, followlinks=False):
+        directories[:] = sorted(d for d in directories if d not in {".git", "__pycache__", ".venv", "node_modules"} and not (Path(root) / d).is_symlink())
+        path = Path(root) / "SKILL.md"
+        if "SKILL.md" not in files or path.is_symlink():
             continue
-
-        if not (directory / "SKILL.md").is_file():
+        try:
+            skill = load_skill(path.parent)
+        except (ValueError, OSError, yaml.YAMLError) as error:
+            logger.warning("Skipping invalid skill %s: %s", path, error)
             continue
-
-        skill = load_skill(directory)
+        if skill.name in seen:
+            raise ValueError(f"重复的 Skill 名称 {skill.name!r}: {seen[skill.name]} 和 {path}")
+        seen[skill.name] = path
         skills.append(skill)
 
     return skills

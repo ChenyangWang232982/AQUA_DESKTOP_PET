@@ -12,14 +12,17 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from graph import build_agent_graph
+from model import create_chat_model, load_model_config
 from storage.sqlite import MessageStore
 
 from components.context.context import build_context
+from components.permissions.router import decide_permissions
 from components.sandbox.session import sandbox_task
 
 
 store = MessageStore()
 agent = None
+agent_config = None
 
 
 @asynccontextmanager
@@ -58,7 +61,7 @@ def health() -> dict[str, bool]:
 async def chat(request: ChatRequest) -> ChatResponse:
     """保存用户消息，运行 Agent，再保存模型回复。"""
 
-    global agent
+    global agent, agent_config
 
     if not request.content.strip() and not request.attachments:
         raise HTTPException(status_code=400, detail="请输入消息或添加图片。")
@@ -83,11 +86,19 @@ async def chat(request: ChatRequest) -> ChatResponse:
     store.save("user", saved_content)
 
     try:
-        if agent is None:
-            agent = build_agent_graph()
+        current_config = load_model_config()
+        if agent is None or current_config != agent_config:
+            agent = create_chat_model(current_config)
+            agent_config = current_config
 
         # 保留原来的基础提示词和历史消息拼接逻辑。
-        messages = build_context(store.load_messages())
+        history = store.load_messages()
+        messages = build_context(history)
+        current_model = agent
+        decision = await decide_permissions(
+            current_model, history, [item.name for item in request.attachments],
+        )
+        request_agent = build_agent_graph(current_model, decision.web_search, decision.sandbox)
         if image_blocks:
             messages[-1] = {
                 "role": "user",
@@ -96,12 +107,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         # 一次用户请求使用一个沙盒会话。
         async with sandbox_task():
-            result = await agent.ainvoke(
+            result = await request_agent.ainvoke(
                 {"messages": messages},
                 config={"recursion_limit": 20},
             )
 
         reply = result["reply"]
+        if not decision.succeeded:
+            reply += "\n\n（权限判断未完成，本次未启用联网搜索或沙盒工具。）"
 
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error

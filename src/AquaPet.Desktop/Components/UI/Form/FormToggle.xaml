@@ -7,13 +7,13 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="CheckBox">
-            <Border x:Name="Box" Width="22" Height="22" Background="{StaticResource NightBrush}" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="2">
-              <TextBlock x:Name="Mark" Text="✓" Foreground="{StaticResource InkBrush}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
+            <Border x:Name="Box" Width="22" Height="22" Background="{StaticResource NightBrush}" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="1">
+              <TextBlock x:Name="Mark" Text="✓" Foreground="#242832" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" />
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" /></Trigger>
               <Trigger Property="IsChecked" Value="True">
-                <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}" />
+                <Setter TargetName="Box" Property="Background" Value="#FF6B6B" />
                 <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
               </Trigger>
             </ControlTemplate.Triggers>
@@ -22,7 +22,7 @@
       </Setter>
     </Style>
   </UserControl.Resources>
-  <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="2" Padding="20" MinHeight="86">
+  <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentDarkBrush}" BorderThickness="1" Padding="20" MinHeight="86">
     <Grid>
       <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
       <StackPanel VerticalAlignment="Center">

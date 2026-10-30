@@ -5,9 +5,9 @@
              xmlns:form="clr-namespace:AquaPet.Desktop.Components.UI.Form"
              Loaded="ModelSettingsPanel_Loaded">
   <UserControl.Resources>
-    <Style x:Key="InputStyle" TargetType="TextBox"><Setter Property="Background" Value="{StaticResource NightBrush}" /><Setter Property="Foreground" Value="White" /><Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" /><Setter Property="BorderThickness" Value="2" /><Setter Property="Padding" Value="9,6" /><Setter Property="FontFamily" Value="Cascadia Mono" /></Style>
-    <Style x:Key="PasswordInputStyle" TargetType="PasswordBox"><Setter Property="Background" Value="{StaticResource NightBrush}" /><Setter Property="Foreground" Value="White" /><Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" /><Setter Property="BorderThickness" Value="2" /><Setter Property="Padding" Value="9,6" /><Setter Property="FontFamily" Value="Cascadia Mono" /></Style>
-    <Style x:Key="FooterSaveButton" TargetType="{x:Type ui:PixelButton}" BasedOn="{StaticResource {x:Type ui:PixelButton}}"><Setter Property="Background" Value="{StaticResource SidebarBrush}" /><Setter Property="BorderBrush" Value="#4A9EC5" /><Setter Property="Foreground" Value="#123B6A" /></Style>
+    <Style x:Key="InputStyle" TargetType="TextBox"><Setter Property="Background" Value="{StaticResource NightBrush}" /><Setter Property="Foreground" Value="#F1F1EE" /><Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" /><Setter Property="BorderThickness" Value="1" /><Setter Property="Padding" Value="9,6" /><Setter Property="FontFamily" Value="Microsoft YaHei" /></Style>
+    <Style x:Key="PasswordInputStyle" TargetType="PasswordBox"><Setter Property="Background" Value="{StaticResource NightBrush}" /><Setter Property="Foreground" Value="#F1F1EE" /><Setter Property="BorderBrush" Value="{StaticResource AccentDarkBrush}" /><Setter Property="BorderThickness" Value="1" /><Setter Property="Padding" Value="9,6" /><Setter Property="FontFamily" Value="Microsoft YaHei" /></Style>
+    <Style x:Key="FooterSaveButton" TargetType="{x:Type ui:PixelButton}" BasedOn="{StaticResource {x:Type ui:PixelButton}}"><Setter Property="Background" Value="{StaticResource SidebarBrush}" /><Setter Property="BorderBrush" Value="#777B80" /><Setter Property="Foreground" Value="#F1F1EE" /></Style>
   </UserControl.Resources>
   <Grid>
     <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
